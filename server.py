@@ -13,8 +13,13 @@ from flask import Flask, request
 import logging
 import argparse
 import urllib2
+import boto3
+from datetime import datetime
 
 logging.basicConfig(filename='logging.log',level=logging.DEBUG)
+
+dynamodb = boto3.resource('dynamodb')
+table = dynamodb.Table('handled_ids')
 
 # parsing arguments
 PARSER = argparse.ArgumentParser(description='Client message processor')
@@ -86,6 +91,16 @@ def process_message(msg):
         req = urllib2.Request(url, data=result, headers={'x-gameday-token':ARGS.API_token})
         resp = urllib2.urlopen(req)
         resp.close()
+
+        table.put_item(
+            Item={
+                    'id': msg_id,
+                    'sentdate': datetime.now().strftime("%Y-%m-%d-%H:%M:%S"),
+                    'data': result,
+                    'response': resp,
+                }
+            )
+
         APP.logger.debug(resp)
 
     return 'OK'
