@@ -139,8 +139,8 @@ def process_message_dynamo(msg):
         parts = ['PENDING' for i in range(total_parts)]
     else:
         APP.logger.debug("DYNAMO: Existing item")
-        parts = item.get('parts_data')
-        APP.logger.debug("DYNAMO: existing parts: %s" % parts)
+        parts = item[0].get('parts_data')
+        APP.logger.debug("DYNAMO: existing parts: %s" % ','.join(parts))
     
     parts[part_number] = data
     APP.logger.debug("DYNAMO: %s" % ','.join(parts))
