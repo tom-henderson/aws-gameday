@@ -105,8 +105,7 @@ def process_message(msg):
             Item={
                     'id': msg_id,
                     'sentdate': datetime.now().strftime("%Y-%m-%d-%H:%M:%S"),
-                    'data': result,
-                    'response': resp,
+                    'data': result
                 }
             )
 
