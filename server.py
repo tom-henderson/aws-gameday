@@ -15,10 +15,11 @@ import argparse
 import urllib2
 import boto3
 from datetime import datetime
+from boto3.dynamodb.conditions import Key, Attr
 
 logging.basicConfig(filename='logging.log',level=logging.DEBUG)
 
-dynamodb = boto3.resource('dynamodb')
+dynamodb = boto3.resource('dynamodb', region_name='us-east-1')
 table = dynamodb.Table('handled_ids')
 
 # parsing arguments
@@ -77,6 +78,14 @@ def process_message(msg):
     # if both parts are filled, the message is complete
     if None not in parts:
         APP.logger.debug("got a complete message for %s" % msg_id)
+
+        response = table.query(KeyConditionExpression=Key('id').eq(msg_id))
+        
+        items = response.get('Items')
+        if items:
+            APP.logger.debug("Skipped. All ready responded for item: %s" % msg_id)
+            return 'OK'
+
         # We can build the final message.
         result = ''.join(parts)
         # sending the response to the score calculator
