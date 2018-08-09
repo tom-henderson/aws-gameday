@@ -136,7 +136,7 @@ def process_message_dynamo(msg):
 
     if not item:
         APP.logger.debug("DYNAMO: New item")
-        parts = ['' for i in range(total_parts)])
+        parts = ['' for i in range(total_parts)]
     else:
         APP.logger.debug("DYNAMO: Existing item")
         parts = json.loads(item.get('parts_data'))
