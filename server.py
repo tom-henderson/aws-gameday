@@ -156,6 +156,42 @@ def process_message_dynamo(msg):
     if 'PENDING' not in parts:
         APP.logger.debug("DYNAMO: Ready to send msg_id %s" % msg['Id'])
 
+        response = handled_ids_table.query(KeyConditionExpression=Key('id').eq(msg_id))
+
+        items = response.get('Items')
+        if items:
+            APP.logger.debug("DYNMAO: Skipped. All ready responded for item: %s" % msg_id)
+            # return 'OK' ############
+            
+            result = ''.join(parts)
+            expected_result = items[0].get('data')
+
+            if result == expected_result:
+                APP.logger.debug("DYNMAO: Got expected result")
+            else:
+                APP.logger.debug("DYNMAO: Something went wrong")
+                APP.logger.debug("result: %s" % result)
+                APP.logger.debug("expected_result: %s" % expected_result)
+
+        # APP.logger.debug("DYNAMO: ID: %s" % msg_id)
+        # APP.logger.debug("DYNAMO: RESULT: %s" % result)
+        # url = API_BASE + '/' + msg_id
+        # APP.logger.debug("DYNAMO: Sending response to %s" % url)
+        # req = urllib2.Request(url, data=result, headers={'x-gameday-token':ARGS.API_token})
+        # resp = urllib2.urlopen(req)
+        # server_response = resp.read()
+        # resp.close()
+
+        # handled_ids_table.put_item(
+        #     Item={
+        #             'id': msg_id,
+        #             'sentdate': datetime.now().strftime("%Y-%m-%d-%H:%M:%S"),
+        #             'data': result
+        #         }
+        #     )
+
+        # APP.logger.debug(server_response)
+
     return 'OK'
 
 if __name__ == "__main__":
