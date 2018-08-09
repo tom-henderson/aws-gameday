@@ -46,8 +46,8 @@ def main_handler():
     """
     if request.method == 'POST':
         # APP.logger.debug("Received POST: %s" % json.dumps(request.get_json()))
-        result = process_message(request.get_json())
-        process_message_dynamo(request.get_json())
+        # result = process_message(request.get_json())
+        result = process_message_dynamo(request.get_json())
         return result
     else:
         return get_message_stats()
@@ -161,36 +161,28 @@ def process_message_dynamo(msg):
         items = response.get('Items')
         if items:
             APP.logger.debug("DYNAMO: Skipped. All ready responded for item: %s" % msg_id)
-            # return 'OK' ############
-            
-            result = ''.join(parts)
-            expected_result = items[0].get('data')
+            return 'OK'
 
-            if result == expected_result:
-                APP.logger.debug("DYNAMO: Got expected result")
-            else:
-                APP.logger.debug("DYNAMO: Something went wrong")
-                APP.logger.debug("result: %s" % result)
-                APP.logger.debug("expected_result: %s" % expected_result)
+        result = ''.join(parts)
 
-        # APP.logger.debug("DYNAMO: ID: %s" % msg_id)
-        # APP.logger.debug("DYNAMO: RESULT: %s" % result)
-        # url = API_BASE + '/' + msg_id
-        # APP.logger.debug("DYNAMO: Sending response to %s" % url)
-        # req = urllib2.Request(url, data=result, headers={'x-gameday-token':ARGS.API_token})
-        # resp = urllib2.urlopen(req)
-        # server_response = resp.read()
-        # resp.close()
+        APP.logger.debug("DYNAMO: ID: %s" % msg_id)
+        APP.logger.debug("DYNAMO: RESULT: %s" % result)
+        url = API_BASE + '/' + msg_id
+        APP.logger.debug("DYNAMO: Sending response to %s" % url)
+        req = urllib2.Request(url, data=result, headers={'x-gameday-token':ARGS.API_token})
+        resp = urllib2.urlopen(req)
+        server_response = resp.read()
+        resp.close()
 
-        # handled_ids_table.put_item(
-        #     Item={
-        #             'id': msg_id,
-        #             'sentdate': datetime.now().strftime("%Y-%m-%d-%H:%M:%S"),
-        #             'data': result
-        #         }
-        #     )
+        handled_ids_table.put_item(
+            Item={
+                    'id': msg_id,
+                    'sentdate': datetime.now().strftime("%Y-%m-%d-%H:%M:%S"),
+                    'data': result
+                }
+            )
 
-        # APP.logger.debug(server_response)
+        APP.logger.debug(server_response)
 
     return 'OK'
 
