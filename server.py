@@ -140,9 +140,11 @@ def process_message_dynamo(msg):
     else:
         APP.logger.debug("DYNAMO: Existing item")
         parts = item.get('parts_data')
+        APP.logger.debug(f'DYNAMO: existing parts: {parts}')
+
     
     parts[part_number] = data
-    APP.logger.debug(','.join(parts))
+    APP.logger.debug("DYNAMO: %s" % ','.join(parts))
 
     transient_messages_table.put_item(
         Item={
