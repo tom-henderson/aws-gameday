@@ -14,6 +14,7 @@ import logging
 import argparse
 import urllib2
 import boto3
+import json
 from datetime import datetime
 from boto3.dynamodb.conditions import Key, Attr
 
@@ -43,6 +44,7 @@ def main_handler():
     main routing for requests
     """
     if request.method == 'POST':
+        APP.logger.debug("Received POST: %s" % json.dumps(request.get_json()))
         return process_message(request.get_json())
     else:
         return get_message_stats()
