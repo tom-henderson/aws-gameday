@@ -135,19 +135,25 @@ def process_message_dynamo(msg):
     item = response.get('Items')
 
     if not item:
-        # Add the item to dynamo
+        APP.logger.debug("DYNAMO: New item")
+        parts = ['' for i in range(total_parts)])
     else:
-        # Update the existing item
-
-    # store this part of the message in the correct part of the list
+        APP.logger.debug("DYNAMO: Existing item")
+        parts = json.loads(item.get('parts_data'))
+    
     parts[part_number] = data
+    APP.logger.debug(','.join(parts))
 
-    # store the parts in MESSAGES
-    MESSAGES[msg_id] = parts
+    transient_messages_table.put_item(
+        Item={
+            'id': msg_id,
+            'modified_date': datetime.now().strftime("%Y-%m-%d-%H:%M:%S"),
+            'parts_data': parts
+        }
+    )
 
-    # if both parts are filled, the message is complete
-    if None not in parts:
-        APP.logger.debug("DYNAMO: got a complete message for %s" % msg_id)
+    if '' not in parts:
+        APP.logger.debug("DYNAMO: Ready to send msg_id %s" % msg['Id'])
 
     return 'OK'
 
