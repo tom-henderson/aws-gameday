@@ -21,7 +21,8 @@ from boto3.dynamodb.conditions import Key, Attr
 logging.basicConfig(filename='logging.log',level=logging.DEBUG)
 
 dynamodb = boto3.resource('dynamodb', region_name='us-east-1')
-table = dynamodb.Table('handled_ids')
+handled_ids_table = dynamodb.Table('handled_ids')
+transient_messages_table = dynamodb.Table('transient_messages')
 
 # parsing arguments
 PARSER = argparse.ArgumentParser(description='Client message processor')
@@ -44,8 +45,10 @@ def main_handler():
     main routing for requests
     """
     if request.method == 'POST':
-        APP.logger.debug("Received POST: %s" % json.dumps(request.get_json()))
-        return process_message(request.get_json())
+        # APP.logger.debug("Received POST: %s" % json.dumps(request.get_json()))
+        result = process_message(request.get_json())
+        process_message_dynamo(request.get_json())
+        return result
     else:
         return get_message_stats()
 
@@ -81,7 +84,7 @@ def process_message(msg):
     if None not in parts:
         APP.logger.debug("got a complete message for %s" % msg_id)
 
-        response = table.query(KeyConditionExpression=Key('id').eq(msg_id))
+        response = handled_ids_table.query(KeyConditionExpression=Key('id').eq(msg_id))
         
         items = response.get('Items')
         if items:
@@ -104,7 +107,7 @@ def process_message(msg):
         server_response = resp.read()
         resp.close()
 
-        table.put_item(
+        handled_ids_table.put_item(
             Item={
                     'id': msg_id,
                     'sentdate': datetime.now().strftime("%Y-%m-%d-%H:%M:%S"),
@@ -113,6 +116,38 @@ def process_message(msg):
             )
 
         APP.logger.debug(server_response)
+
+    return 'OK'
+
+def process_message_dynamo(msg):
+    """
+    processes the messages by combining and appending the kind code
+    """
+    APP.logger.debug("DYNAMO: Processing a msg_id %s" % msg['Id'])
+
+    msg_id = msg['Id'] # The unique ID for this message
+    total_parts = msg['TotalParts']
+    part_number = msg['PartNumber'] # Which part of the message it is
+    data = msg['Data'] # The data of the message
+
+    # Try to fetch the existing item
+    response = transient_messages_table.query(KeyConditionExpression=Key('id').eq(msg_id))
+    item = response.get('Items')
+
+    if not item:
+        # Add the item to dynamo
+    else:
+        # Update the existing item
+
+    # store this part of the message in the correct part of the list
+    parts[part_number] = data
+
+    # store the parts in MESSAGES
+    MESSAGES[msg_id] = parts
+
+    # if both parts are filled, the message is complete
+    if None not in parts:
+        APP.logger.debug("DYNAMO: got a complete message for %s" % msg_id)
 
     return 'OK'
 
