@@ -109,7 +109,7 @@ def process_message(msg):
                 }
             )
 
-        APP.logger.debug(resp)
+        APP.logger.debug(resp.read())
 
     return 'OK'
 
