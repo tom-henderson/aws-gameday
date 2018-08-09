@@ -99,6 +99,7 @@ def process_message(msg):
         APP.logger.debug("Sending response to %s" % url)
         req = urllib2.Request(url, data=result, headers={'x-gameday-token':ARGS.API_token})
         resp = urllib2.urlopen(req)
+        server_response = resp.read()
         resp.close()
 
         table.put_item(
@@ -109,7 +110,7 @@ def process_message(msg):
                 }
             )
 
-        APP.logger.debug(resp.read())
+        APP.logger.debug(server_response)
 
     return 'OK'
 
