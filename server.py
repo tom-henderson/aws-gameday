@@ -160,16 +160,16 @@ def process_message_dynamo(msg):
 
         items = response.get('Items')
         if items:
-            APP.logger.debug("DYNMAO: Skipped. All ready responded for item: %s" % msg_id)
+            APP.logger.debug("DYNAMO: Skipped. All ready responded for item: %s" % msg_id)
             # return 'OK' ############
             
             result = ''.join(parts)
             expected_result = items[0].get('data')
 
             if result == expected_result:
-                APP.logger.debug("DYNMAO: Got expected result")
+                APP.logger.debug("DYNAMO: Got expected result")
             else:
-                APP.logger.debug("DYNMAO: Something went wrong")
+                APP.logger.debug("DYNAMO: Something went wrong")
                 APP.logger.debug("result: %s" % result)
                 APP.logger.debug("expected_result: %s" % expected_result)
 
